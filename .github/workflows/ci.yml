@@ -1,0 +1,26 @@
+name: VoteScale CI Pipeline
+
+# 1. When should this pipeline run? (Every time we push to the main branch)
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    # 2. What OS should the cloud server use?
+    runs-on: ubuntu-latest
+
+    # 3. What steps should the server execute?
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Test Backend Docker Build
+      run: |
+        cd backend
+        docker build -t votescale-backend:test .
+
+    - name: Test Frontend Docker Build
+      run: |
+        cd frontend
+        docker build -t votescale-frontend:test .
