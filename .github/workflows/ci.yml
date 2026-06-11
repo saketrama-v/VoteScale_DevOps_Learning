@@ -1,26 +1,38 @@
-name: VoteScale CI Pipeline
+name: VoteScale CI/CD Pipeline
 
-# 1. When should this pipeline run? (Every time we push to the main branch)
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
-    # 2. What OS should the cloud server use?
+  build-and-publish:
     runs-on: ubuntu-latest
+    
+    # We need to give the token permission to write to packages
+    permissions:
+      contents: read
+      packages: write
 
-    # 3. What steps should the server execute?
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-    - name: Test Backend Docker Build
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and Push Backend
       run: |
         cd backend
-        docker build -t votescale-backend:test .
+        # Tag the image with your github repository name
+        docker build -t ghcr.io/${{ github.repository_owner }}/votescale-backend:latest .
+        docker push ghcr.io/${{ github.repository_owner }}/votescale-backend:latest
 
-    - name: Test Frontend Docker Build
+    - name: Build and Push Frontend
       run: |
         cd frontend
-        docker build -t votescale-frontend:test .
+        docker build -t ghcr.io/${{ github.repository_owner }}/votescale-frontend:latest .
+        docker push ghcr.io/${{ github.repository_owner }}/votescale-frontend:latest
